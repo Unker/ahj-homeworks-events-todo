@@ -18,6 +18,7 @@ export default class TasksList {
     if (typeof taskTracker === 'string') {
       this._taskTracker = document.querySelector(taskTracker);
       this._listTasks = this._taskTracker.querySelector('.all-tasks');
+      this._pinnedTasks = this._taskTracker.querySelector('.pinned-tasks');
       this._taskInput = this._taskTracker.querySelector('.task-input');
       this._taskForm = this._taskTracker.querySelector('.task-form');
     } else {
@@ -29,11 +30,15 @@ export default class TasksList {
     this.onTaskInput = this.onTaskInput.bind(this);
     this.onClick = this.onClick.bind(this);
 
-    this._tasks = [];
+    // this._tasks = [];
+    this._tasksMap = new Map([]);
 
     for (const task of testTasks) {
-      this._tasks.push(new Task(task));
+      // this._tasksMap.push(new Task(task));
+      const id = Math.floor(Math.random() * 1e10).toString();
+      this._tasksMap.set(id, new Task(task));
     }
+    console.log(this._tasksMap);
 
     const tasks = []; // Array to store all tasks
 
@@ -42,10 +47,10 @@ export default class TasksList {
     this._taskTracker.addEventListener('click', this.onClick);
   }
 
-  static renderItem(task) {
+  static renderItem(key, task) {
     return `
       <li class="task-list-item">
-        <div class="task-item-main" id=${task.id}>
+        <div class="task-item-main" id=${key}>
           <span class="task-item-name">${task.name}</span>
           <input type="checkbox" class="task__checker" ${task.pinned ? 'checked' : ''} />
 
@@ -55,31 +60,37 @@ export default class TasksList {
 
   _clear() {
     const items = this._listTasks.querySelectorAll('.task-list-item');
-
     for (const child of items) {
+      child.remove();
+    }
+
+    const itemsPinned = this._pinnedTasks.querySelectorAll('.task-list-item');
+    for (const child of itemsPinned) {
       child.remove();
     }
   }
 
   _renderItems(items) {
-    console.log('items:', items);
     this._clear();
 
-    items.forEach((task) => {
-      const itemHtml = TasksList.renderItem(task);
-
-      this._listTasks.insertAdjacentHTML('beforeend', itemHtml);
+    items.forEach((task, key) => {
+      const itemHtml = TasksList.renderItem(key, task);
+      if (task.pinned) {
+        this._pinnedTasks.insertAdjacentHTML('beforeend', itemHtml);
+      } else {
+        this._listTasks.insertAdjacentHTML('beforeend', itemHtml);
+      }
     });
   }
 
   renderTasks() {
-    this._renderItems(this._tasks);
+    this._renderItems(this._tasksMap);
   }
 
   filter(text) {
     const filterCallback = filterCb.bind(null, text);
 
-    this._renderItems(filterBy(this._tasks, filterCallback));
+    this._renderItems(filterBy(this._tasksMap, filterCallback));
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -100,7 +111,7 @@ export default class TasksList {
       }
 
       const newTask = new Task(taskName);
-      this._tasks.push(newTask);
+      this._tasksMap.push(newTask);
 
       // Clear input field and re-render tasks
       this._taskInput.value = '';
@@ -116,7 +127,8 @@ export default class TasksList {
       // наступили на pin
       const listItem = target.closest('.task-item-main');
       const idItem = listItem.id;
-      // this._listTasks;
+      this._tasksMap.get(idItem).pinned = target.checked;
+      this.renderTasks();
     }
   }
 }
