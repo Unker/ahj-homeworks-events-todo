@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <header class="header">
+        <div class="logo__container">
+          <a href="https://netology.ru/" class="logo__link"></a>
+        </div>
+        <h1 class="header__title">
+            Назначенные задачи
+        </h1>
+    </header>
+
+    <div class="task-tracker">
+        <div class="filter-widget">
+            <h2>TOP Tasks</h2>
+            <form class="task-form">
+                <input required class="input task-input" placeholder="Введите название задачи">
+            </form>
+        </div>
+
+        <div class="pinned-tasks">
+            <h2>Pinned</h2>
+            <ul id="pinnedTasks">
+                <!-- Pinned tasks will be added dynamically here -->
+            </ul>
+            <p id="pinnedMessage">No pinned tasks</p>
+        </div>
+        <div class="all-tasks">
+            <h2>All Tasks</h2>
+            <ul id="allTasks">
+                <!-- All tasks will be added dynamically here -->
+            </ul>
+            <p id="notFoundMessage">No tasks found</p>
+        </div>
+    </div>
+
+</body>
+
+</html>
