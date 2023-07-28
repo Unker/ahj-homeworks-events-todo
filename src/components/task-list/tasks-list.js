@@ -11,16 +11,23 @@ const testTasks = [
   'Подготовить отчет о выполненных задачах за прошлую неделю',
 ];
 
-const filterCb = (search, task) => containsText(`${task.first_name} ${task.last_name}`, search);
+const filterCb = (search, [id, task]) => {
+  if (task.pinned) {
+    return false;
+  }
+  return containsText(`${task.name}`, search);
+};
 
 export default class TasksList {
   constructor(taskTracker) {
     if (typeof taskTracker === 'string') {
       this._taskTracker = document.querySelector(taskTracker);
-      this._listTasks = this._taskTracker.querySelector('.all-tasks');
-      this._pinnedTasks = this._taskTracker.querySelector('.pinned-tasks');
+      this._listTasks = this._taskTracker.querySelector('.allTasksList');
+      this._pinnedTasks = this._taskTracker.querySelector('.pinnedTasksList');
       this._taskInput = this._taskTracker.querySelector('.task-input');
       this._taskForm = this._taskTracker.querySelector('.task-form');
+      this._notFoundMessage = this._taskTracker.querySelector('.notFoundMessage');
+      this._pinnedMessage = this._taskTracker.querySelector('.pinnedMessage');
     } else {
       throw new Error('Некорректный селектор', taskTracker);
     }
@@ -30,20 +37,15 @@ export default class TasksList {
     this.onTaskInput = this.onTaskInput.bind(this);
     this.onClick = this.onClick.bind(this);
 
-    // this._tasks = [];
     this._tasksMap = new Map([]);
 
     for (const task of testTasks) {
-      // this._tasksMap.push(new Task(task));
       const id = Math.floor(Math.random() * 1e10).toString();
       this._tasksMap.set(id, new Task(task));
     }
-    console.log(this._tasksMap);
 
-    const tasks = []; // Array to store all tasks
-
-    this._taskInput.addEventListener('keydown', this.onTaskInput);
     this._taskForm.addEventListener('submit', this.onTaskSubmit);
+    this._taskInput.addEventListener('keydown', this.onTaskInput);
     this._taskTracker.addEventListener('click', this.onClick);
   }
 
@@ -70,17 +72,38 @@ export default class TasksList {
     }
   }
 
-  _renderItems(items) {
+  _renderItems(filteredItems) {
     this._clear();
 
-    items.forEach((task, key) => {
+    // render pinned
+    this._tasksMap.forEach((task, key) => {
       const itemHtml = TasksList.renderItem(key, task);
       if (task.pinned) {
         this._pinnedTasks.insertAdjacentHTML('beforeend', itemHtml);
-      } else {
+      }
+    });
+
+    // render filtered
+    filteredItems.forEach((task, key) => {
+      const itemHtml = TasksList.renderItem(key, task);
+      if (!task.pinned) {
         this._listTasks.insertAdjacentHTML('beforeend', itemHtml);
       }
     });
+
+    const items = this._listTasks.querySelector('.task-list-item');
+    if (items) {
+      this._notFoundMessage.style.display = 'none';
+    } else {
+      this._notFoundMessage.style.display = 'flex';
+    }
+
+    const itemsPinned = this._pinnedTasks.querySelector('.task-list-item');
+    if (itemsPinned) {
+      this._pinnedMessage.style.display = 'none';
+    } else {
+      this._pinnedMessage.style.display = 'flex';
+    }
   }
 
   renderTasks() {
@@ -102,16 +125,16 @@ export default class TasksList {
 
   onTaskInput(e) {
     if (e.key === 'Enter') {
-      console.log('enter');
       const taskName = this._taskInput.value.trim();
 
       if (taskName.length === 0) {
-        console.log('bad string');
         return;
       }
 
-      const newTask = new Task(taskName);
-      this._tasksMap.push(newTask);
+      const id = Math.floor(Math.random() * 1e10).toString();
+      this._tasksMap.set(id, new Task(taskName));
+
+      e.stopImmediatePropagation();
 
       // Clear input field and re-render tasks
       this._taskInput.value = '';
@@ -122,7 +145,6 @@ export default class TasksList {
   // eslint-disable-next-line class-methods-use-this
   onClick(e) {
     const { target } = e;
-    console.log('click', e.target);
     if (target.classList.contains('task__checker')) {
       // наступили на pin
       const listItem = target.closest('.task-item-main');

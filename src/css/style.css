@@ -59,6 +59,6 @@ ul {
   flex: 1;
 }
 
-#pinnedMessage, #notFoundMessage {
+.pinnedMessage, .notFoundMessage {
   display: none;
 }
